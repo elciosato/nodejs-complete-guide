@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
+const isAuth = require("./middleware/is-auth");
+
 const errorController = require("./controllers/error");
 // const { mongoConnect } = require("./util/database");
 const User = require("./models/user");
@@ -35,7 +37,6 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  console.log("User session:", req.session.user);
   if (!req.session.user) {
     return next();
   }
@@ -51,7 +52,7 @@ app.use((req, res, next) => {
     });
 });
 
-app.use("/admin", adminRoutes);
+app.use("/admin", isAuth, adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
@@ -61,16 +62,6 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then((result) => {
     console.log("Mongoose connected");
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = User({
-          name: "Elcio",
-          email: "elciosato@gmail.com",
-          cart: { items: [] },
-        });
-        user.save();
-      }
-    });
     app.listen(3000, () => {
       console.log("Server running on port 3000");
     });
